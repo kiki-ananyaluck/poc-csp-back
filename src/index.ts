@@ -6,8 +6,20 @@ dotenv.config();
 
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
+const allowedOrigins = new Set([
+  'http://localhost:4200',
+  'https://poc-csp-front.vercel.app',
+  ...(process.env.FRONTEND_ORIGIN?.split(',').map((origin) => origin.trim()).filter(Boolean) ?? [])
+]);
 
-app.use(cors({ origin: process.env.FRONTEND_ORIGIN ?? 'http://localhost:4200' }));
+app.use(cors({ origin: (origin, callback) => {
+  if (!origin || allowedOrigins.has(origin)) {
+    callback(null, true);
+    return;
+  }
+
+  callback(new Error('Origin is not allowed by CORS'));
+} }));
 app.use(express.json());
 
 app.get('/api/health', (_request, response) => {
