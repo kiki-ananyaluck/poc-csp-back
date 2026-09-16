@@ -6,14 +6,19 @@ dotenv.config();
 
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
-const allowedOrigins = new Set([
-  'http://localhost:4200',
-  'https://poc-csp-front.vercel.app',
-  ...(process.env.FRONTEND_ORIGIN?.split(',').map((origin) => origin.trim()).filter(Boolean) ?? [])
-]);
+const allowedOrigins = new Set(
+  [
+    'http://localhost:4200',
+    'https://poc-csp-front.vercel.app',
+    'https://secure.kikiluckily-lab.stream/',
+    ...(process.env.FRONTEND_ORIGIN?.split(',') ?? [])
+  ]
+    .map((origin) => origin.trim().replace(/\/$/, ''))
+    .filter(Boolean)
+);
 
 app.use(cors({ origin: (origin, callback) => {
-  if (!origin || allowedOrigins.has(origin)) {
+  if (!origin || allowedOrigins.has(origin.replace(/\/$/, ''))) {
     callback(null, true);
     return;
   }

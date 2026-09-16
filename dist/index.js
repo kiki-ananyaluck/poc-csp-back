@@ -12,10 +12,12 @@ const port = Number(process.env.PORT ?? 3000);
 const allowedOrigins = new Set([
     'http://localhost:4200',
     'https://poc-csp-front.vercel.app',
-    ...(process.env.FRONTEND_ORIGIN?.split(',').map((origin) => origin.trim()).filter(Boolean) ?? [])
-]);
+    ...(process.env.FRONTEND_ORIGIN?.split(',') ?? [])
+]
+    .map((origin) => origin.trim().replace(/\/$/, ''))
+    .filter(Boolean));
 app.use((0, cors_1.default)({ origin: (origin, callback) => {
-        if (!origin || allowedOrigins.has(origin)) {
+        if (!origin || allowedOrigins.has(origin.replace(/\/$/, ''))) {
             callback(null, true);
             return;
         }
