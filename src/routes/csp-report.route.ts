@@ -31,6 +31,8 @@ cspReportRouter.post(
     type: ['application/json', 'application/*+json', 'application/reports+json', 'application/csp-report']
   }),
   async (request, response) => {
+    console.log('[csp-report] raw browser payload', JSON.stringify(request.body, null, 2));
+
     const result = processReportsPayload(request.body);
 
     if (!result || result.entries.length === 0) {
