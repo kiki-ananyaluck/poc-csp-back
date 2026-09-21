@@ -1,21 +1,10 @@
 import cors from 'cors';
-import dotenv from 'dotenv';
 import express from 'express';
-
-dotenv.config();
+import type { NextFunction, Request, Response } from 'express';
+import { allowedOrigins, port } from './config.js';
+import { cspReportRouter } from './routes/csp-report.route.js';
 
 const app = express();
-const port = Number(process.env.PORT ?? 3000);
-const allowedOrigins = new Set(
-  [
-    'http://localhost:4200',
-    'https://poc-csp-front.vercel.app',
-    'https://secure.kikiluckily-lab.stream/',
-    ...(process.env.FRONTEND_ORIGIN?.split(',') ?? [])
-  ]
-    .map((origin) => origin.trim().replace(/\/$/, ''))
-    .filter(Boolean)
-);
 
 app.use(cors({ origin: (origin, callback) => {
   if (!origin || allowedOrigins.has(origin.replace(/\/$/, ''))) {
@@ -33,6 +22,25 @@ app.get('/api/health', (_request, response) => {
 
 app.get('/api/message', (_request, response) => {
   response.json({ message: 'สวัสดีจาก Node.js backend' });
+});
+
+app.use(cspReportRouter);
+
+app.use((error: unknown, _request: Request, response: Response, _next: NextFunction) => {
+  const bodyParserError = error as { type?: string } | undefined;
+
+  if (bodyParserError?.type === 'entity.too.large') {
+    response.status(413).json({ error: 'payload_too_large' });
+    return;
+  }
+
+  if (bodyParserError?.type === 'entity.parse.failed' || error instanceof SyntaxError) {
+    response.status(400).json({ error: 'invalid_json' });
+    return;
+  }
+
+  console.error(error);
+  response.status(500).json({ error: 'internal_error' });
 });
 
 app.listen(port, () => {
