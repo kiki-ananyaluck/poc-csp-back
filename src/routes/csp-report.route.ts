@@ -26,14 +26,24 @@ cspReportRouter.post(
     }
     next();
   },
-  express.json({ type: () => true, limit: MAX_BODY_SIZE }),
+  express.json({
+    limit: MAX_BODY_SIZE,
+    type: ['application/json', 'application/*+json', 'application/reports+json', 'application/csp-report']
+  }),
   async (request, response) => {
     const result = processReportsPayload(request.body);
 
     if (!result || result.entries.length === 0) {
+      console.warn('[csp-report] rejected report payload', request.body);
       response.status(400).json({ error: 'invalid_report' });
       return;
     }
+
+    console.log('[csp-report] accepted report payload', JSON.stringify({
+      acceptedCount: result.entries.length,
+      rejectedCount: result.rejectedCount,
+      entries: result.entries
+    }, null, 2));
 
     let persistedCount = 0;
     for (const entry of result.entries) {

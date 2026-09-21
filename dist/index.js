@@ -15,7 +15,6 @@ app.use((0, cors_1.default)({ origin: (origin, callback) => {
         }
         callback(new Error('Origin is not allowed by CORS'));
     } }));
-app.use(express_1.default.json());
 app.get('/api/health', (_request, response) => {
     response.json({ status: 'ok', service: 'poc-csp-back' });
 });
